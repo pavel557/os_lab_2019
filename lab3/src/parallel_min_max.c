@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
     int option_index = 0;
     int c = getopt_long(argc, argv, "f", options, &option_index);
-
+    
     if (c == -1) break;
 
     switch (c) {
@@ -91,60 +91,109 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+    
+
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
+
+for(int i=0;i<array_size;i++)
+{
+    printf("%d ", array[i]);
+}
+printf("\n");
+
   int active_child_processes = 0;
 
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
+  int fd[2];
+  if(pipe(fd) == -1)
+  {
+      return -1;
+  }
+
   for (int i = 0; i < pnum; i++) {
     pid_t child_pid = fork();
     if (child_pid >= 0) {
-      // successful fork
       active_child_processes += 1;
       if (child_pid == 0) {
-        // child process
-
-        // parallel somehow
+        int begin, end;
+        begin = i * array_size/pnum + 1;
+        if (i < pnum - 1)
+        {
+            end = begin + array_size/pnum;
+        }
+        else {
+            end = array_size;
+        }
+        struct MinMax min_max = GetMinMax(array, begin, end);
+        
+        
 
         if (with_files) {
-          // use files here
+            char buff[20];
+            FILE *fp;
+            fp=fopen("min.txt", "a");
+            fprintf(fp, "%d\n", min_max.min);
+            fclose(fp);
+            fp=fopen("max.txt", "a");
+            fprintf(fp, "%d\n", min_max.max);
+            fclose(fp);
         } else {
-          // use pipe here
+            close(fd[0]);
+            write(fd[1], &(min_max.min), sizeof(min_max.min));
+            write(fd[1], &(min_max.max), sizeof(min_max.max));
+            close(fd[1]);
         }
+        
         return 0;
       }
-
     } else {
       printf("Fork failed!\n");
       return 1;
     }
+    
+
   }
 
   while (active_child_processes > 0) {
-    // your code here
-
+    wait(NULL);
     active_child_processes -= 1;
+    
   }
-
+  
   struct MinMax min_max;
   min_max.min = INT_MAX;
   min_max.max = INT_MIN;
+
+  
+    FILE *fp1, *fp2;
 
   for (int i = 0; i < pnum; i++) {
     int min = INT_MAX;
     int max = INT_MIN;
 
     if (with_files) {
-      // read from files
+        fp1=fopen("min.txt", "r");
+        fscanf(fp1, "%d", &min);
+        fgetc(fp1);
+        fp2=fopen("max.txt", "r");
+        fscanf(fp2, "%d", &max);
+        fgetc(fp2);
     } else {
-      // read from pipes
+        close(fd[1]);
+        read(fd[0], &(min), sizeof(min));
+        read(fd[0], &(max), sizeof(max));
+        close(fd[0]);
     }
 
     if (min < min_max.min) min_max.min = min;
     if (max > min_max.max) min_max.max = max;
   }
+
+  fclose(fp1);
+  fclose(fp2);
 
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
