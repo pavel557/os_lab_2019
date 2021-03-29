@@ -91,16 +91,16 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-    
+    FILE *fp;
+    fp=fopen("min.txt", "w");
+    fclose(fp);
+    fp=fopen("max.txt", "w");
+    fclose(fp);
 
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
 
-for(int i=0;i<array_size;i++)
-{
-    printf("%d ", array[i]);
-}
-printf("\n");
+
 
   int active_child_processes = 0;
 
@@ -169,31 +169,31 @@ printf("\n");
 
   
     FILE *fp1, *fp2;
-
+fp1=fopen("min.txt", "r");
+fp2=fopen("max.txt", "r");
   for (int i = 0; i < pnum; i++) {
     int min = INT_MAX;
     int max = INT_MIN;
 
     if (with_files) {
-        fp1=fopen("min.txt", "r");
         fscanf(fp1, "%d", &min);
         fgetc(fp1);
-        fp2=fopen("max.txt", "r");
         fscanf(fp2, "%d", &max);
         fgetc(fp2);
     } else {
         close(fd[1]);
         read(fd[0], &(min), sizeof(min));
         read(fd[0], &(max), sizeof(max));
-        close(fd[0]);
+        
     }
 
     if (min < min_max.min) min_max.min = min;
     if (max > min_max.max) min_max.max = max;
   }
 
-  fclose(fp1);
-  fclose(fp2);
+    fclose(fp1);
+    fclose(fp2);
+    close(fd[0]);
 
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
