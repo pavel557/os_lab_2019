@@ -107,8 +107,12 @@ int main(int argc, char **argv) {
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
-  int fd[2];
-  if(pipe(fd) == -1)
+  int fd1[2], fd2[2];
+  if(pipe(fd1) == -1)
+  {
+      return -1;
+  }
+  if(pipe(fd2) == -1)
   {
       return -1;
   }
@@ -119,7 +123,7 @@ int main(int argc, char **argv) {
       active_child_processes += 1;
       if (child_pid == 0) {
         int begin, end;
-        begin = i * array_size/pnum + 1;
+        begin = i * array_size/pnum;
         if (i < pnum - 1)
         {
             end = begin + array_size/pnum;
@@ -141,10 +145,12 @@ int main(int argc, char **argv) {
             fprintf(fp, "%d\n", min_max.max);
             fclose(fp);
         } else {
-            close(fd[0]);
-            write(fd[1], &(min_max.min), sizeof(min_max.min));
-            write(fd[1], &(min_max.max), sizeof(min_max.max));
-            close(fd[1]);
+            close(fd1[0]);
+            close(fd2[0]);
+            write(fd1[1], &(min_max.min), sizeof(min_max.min));
+            write(fd2[1], &(min_max.max), sizeof(min_max.max));
+            close(fd1[1]);
+            close(fd2[1]);
         }
         
         return 0;
@@ -181,9 +187,10 @@ fp2=fopen("max.txt", "r");
         fscanf(fp2, "%d", &max);
         fgetc(fp2);
     } else {
-        close(fd[1]);
-        read(fd[0], &(min), sizeof(min));
-        read(fd[0], &(max), sizeof(max));
+        close(fd1[1]);
+        close(fd2[1]);
+        read(fd1[0], &(min), sizeof(min));
+        read(fd2[0], &(max), sizeof(max));
         
     }
 
@@ -193,7 +200,8 @@ fp2=fopen("max.txt", "r");
 
     fclose(fp1);
     fclose(fp2);
-    close(fd[0]);
+    close(fd1[0]);
+    close(fd2[0]);
 
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
