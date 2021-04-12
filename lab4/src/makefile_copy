@@ -1,0 +1,12 @@
+C=gcc
+CFLAGS=-I.
+all: parallel_sum
+
+parallel_sum : utils.o utils.h
+	$(CC) -pthread -o parallel_sum utils.o parallel_sum.c $(CFLAGS)
+
+utils.o : utils.h
+	$(CC) -o utils.o -c utils.c $(CFLAGS)
+
+clean :
+	rm utils.o parallel_sum
