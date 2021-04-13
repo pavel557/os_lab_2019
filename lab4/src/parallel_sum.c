@@ -31,12 +31,7 @@ void *ThreadSum(void *args) {
 }
 
 int main(int argc, char **argv) {
-  /*
-   *  TODO:
-   *  threads_num by command line arguments
-   *  array_size by command line arguments
-   *	seed by command line arguments
-   */
+  
 
   uint32_t threads_num = 0;
   uint32_t array_size = 0;
@@ -103,20 +98,11 @@ int main(int argc, char **argv) {
 
     printf("\nseed: %d, array_size: %d, threads_num: %d",seed, array_size, threads_num);
     pthread_t threads[threads_num];
-  /*
-   * TODO:
-   * your code here
-   * Generate array here
-   */
+  
 
   int *array = malloc(sizeof(int) * array_size);
     GenerateArray(array, array_size, seed);
-    /*for(int i = 0; i < array_size; i++)
-    {
-       printf("%d ", array[i]);
-    }
-    printf("\n");
-*/
+ 
 
   struct SumArgs args[threads_num];
     for(int i = 0; i < threads_num; i++)

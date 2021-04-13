@@ -16,11 +16,11 @@
 #include "find_min_max.h"
 #include "utils.h"
 
-bool kill_flag = false;
+bool flag = false;
 
 void handle_alarm(int sig)
 {
-    kill_flag = true;
+    flag = true;
 }
 
 int main(int argc, char **argv) {
@@ -143,11 +143,6 @@ int main(int argc, char **argv) {
       return -1;
   }
 
-    
-    printf("%d\n", seed);
-    printf("%d\n", array_size);
-    printf("%d\n", pnum);
-
   for (int i = 0; i < pnum; i++) {
     pid_t w, child_pid = -1;
     child_pid = fork();
@@ -201,8 +196,8 @@ int main(int argc, char **argv) {
 int status;
 
   while (active_child_processes > 0) {
-    if (kill_flag == true){
-        printf("\nThe child processes is killing...\n");
+    if (flag == true){
+        printf("killing process\n");
         for (int i =0; i<pnum; i++)
             kill(currentPid[i], SIGKILL);
         return 1;
