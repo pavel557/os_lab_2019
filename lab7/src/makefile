@@ -1,12 +1,18 @@
 CC=gcc
 CFLAGS=-I.
 
-all: tcpclient tcpserver
+all: tcpclient tcpserver udpclient udpserver
 tcpclient :
 	$(CC) -o tcpclient  tcpclient.c $(CFLAGS)
 
 tcpserver :
 	$(CC) -o tcpserver tcpserver.c $(CFLAGS)
 
+udpclient :
+	$(CC) -o udpclient  udpclient.c $(CFLAGS)
+
+udpserver :
+	$(CC) -o udpserver udpserver.c $(CFLAGS)
+
 clean :
-	rm Mult.o tcpserver tcpclient
+	rm Mult.o tcpserver tcpclient udpclient udpserver
