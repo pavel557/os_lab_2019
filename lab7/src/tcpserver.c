@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 
 #define SADDR struct sockaddr
@@ -93,7 +96,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  while (1) {
+  
+    int UDPCount = -1;
     unsigned int clilen = kSize;
 
     if ((cfd = accept(lfd, (SADDR *)&cliaddr, &clilen)) < 0) {
@@ -102,14 +106,76 @@ int main(int argc, char *argv[]) {
     }
     printf("connection established\n");
 
-    while ((nread = read(cfd, buf, BUFSIZE)) > 0) {
-      write(1, buf, nread);
-    }
+    nread = read(cfd, buf, BUFSIZE);
+
 
     if (nread == -1) {
       perror("read");
       exit(1);
     }
-    close(cfd);
+    UDPCount = atoi(buf);
+    printf("UDPCount= %d\n", UDPCount);
+    if (UDPCount > 4)
+    {
+        exit(1);
+    }
+
+int active_child_processes = 0;
+
+pid_t currentPid[UDPCount];
+
+  int fd1[2], fd2[2];
+  if(pipe(fd1) == -1)
+  {
+      return -1;
   }
+  if(pipe(fd2) == -1)
+  {
+      return -1;
+  }
+
+  for (int i = 0; i < UDPCount; i++) {
+    pid_t child_pid = -1;
+    child_pid = fork();
+    if (child_pid >= 0) {
+      active_child_processes += 1;
+      if (child_pid == 0) {
+         return 0;
+      }
+      if (child_pid > 0)
+      {
+        int sockfd;
+        if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("socket problem");
+        exit(1);
+        }
+        char* buff = calloc(10, sizeof(char));
+        sprintf(buff, "%d", sockfd);
+        printf("%s\n",buff);
+        write(cfd, buff, sizeof(int));
+
+          currentPid[i] = child_pid;
+      }
+    } else {
+        printf("Fork failed!\n");
+      return 1;
+    }
+
+  }
+
+int status;
+
+  while (active_child_processes > 0) {
+        printf("\nThe child processes is killing...\n");
+        for (int i =0; i<UDPCount; i++)
+            kill(currentPid[i], SIGKILL);
+        return 1;
+    while (waitpid(-1, &status, WNOHANG) > 0) 
+    {
+        
+        active_child_processes -= 1;
+    }
+  }
+   close(cfd);
+  
 }
