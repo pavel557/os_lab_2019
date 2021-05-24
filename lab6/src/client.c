@@ -72,15 +72,11 @@ void ListenerHost(void* To)
       exit(1);
     }
     
-    printf("%d\n", arg->begin);
-    printf("%d\n", arg->end);
-    printf("%d\n", mod);
     char task[sizeof(uint64_t) * 3];
     memcpy(task, &(arg->begin), sizeof(uint64_t));
     memcpy(task + sizeof(uint64_t), &(arg->end), sizeof(uint64_t));
     memcpy(task + 2 * sizeof(uint64_t), &mod, sizeof(uint64_t));
 
-    printf("%s\n", task);
     if (send(sck, task, sizeof(task), 0) < 0) {
       fprintf(stderr, "Send failed\n");
       exit(1);
