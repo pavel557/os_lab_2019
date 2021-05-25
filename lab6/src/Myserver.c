@@ -12,6 +12,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#define SADDR struct sockaddr
+#define SLEN sizeof(struct sockaddr_in)
+
 int main()
 {
     int server = socket(AF_INET, SOCK_STREAM, 0);
@@ -32,6 +35,10 @@ int main()
     int UDPCount = atoi(buf);
     int active_child_processes = 0;
     pid_t currentPid[UDPCount];
+    int port = 50000;
+
+
+
     for (int i = 0; i < UDPCount; i++) 
     {
         pid_t child_pid = -1;
@@ -42,24 +49,39 @@ int main()
       }
       if (child_pid > 0)
       {
-        int sockfd;
-        if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("socket problem");
-        exit(1);
-        }
-        int b = sockfd;
-        int a = 1;
-        while (b>=10)
-        {
-            b = b/10;
-            a++;
-        }
-        char* buff = calloc(a+1, sizeof(char));
-        sprintf(buff, "%d", sockfd);
-        printf("%s\n",buff);
-        write(fd, buff, sizeof(buff));
+          port++;
+        int sockfd, n;
+  struct sockaddr_in servaddr;
+  struct sockaddr_in cliaddr;
+
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("socket problem");
+    exit(1);
+  }
+ sleep(1);
+  memset(&servaddr, 0, SLEN);
+  servaddr.sin_family = AF_INET;
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servaddr.sin_port = htons(port);
+
+  if (bind(sockfd, (SADDR *)&servaddr, SLEN) < 0) {
+    perror("bind problem");
+    exit(1);
+  }
+  printf("SERVER starts...\n");
+        write(fd, &servaddr, sizeof(servaddr));
 
           currentPid[i] = child_pid;
+           char* mesg = calloc(256, sizeof(char));
+           unsigned int len = SLEN;
+           sleep(2);
+if ((n = recvfrom(sockfd, mesg, 256, 0, (SADDR *)&cliaddr, &len)) < 0) {
+      perror("recvfrom");
+      exit(1);
+    }
+    mesg[n] = 0;
+
+    printf("REQUEST %s\n", mesg);
       }
         else {
         printf("fork error\n");
@@ -67,6 +89,7 @@ int main()
     }
     }
     printf("active=%d", active_child_processes);
+
     int status;
     while (active_child_processes > 0) {
         printf("\nThe child processes is killing...\n");

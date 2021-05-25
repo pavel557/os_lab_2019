@@ -39,31 +39,30 @@ int main()
     int UDPCount = atoi(buf);
     sleep(1);
     int fdUDP[UDPCount];
-    uint16_t portt = 40000;
+    uint16_t port = 50000;
+    struct sockaddr_in servaddr;
     for (int i=0; i<UDPCount; i++)
     {
-        read(fd, buf, 256);
-        fdUDP[i] = atoi(buf);
-        printf("%d\n", fdUDP[i]);
         
+        read(fd, &servaddr, sizeof(servaddr));
+        port++;
+      int n;
+    int sockfd;
+
+    char buff2[6];
+    sprintf(buff2, "%d", port);
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("socket problem");
+    exit(1);
+  }
+  
+  if (sendto(sockfd, "test", 256, 0, (SADDR *)&servaddr, SLEN) == -1) {
+      perror("sendto problem");
+      exit(1);
     }
-    for (int i=0; i<UDPCount; i++)
-    {
-      portt++;
-      struct sockaddr_in servaddr;
-      memset(&servaddr, 0, SLEN);
-      servaddr.sin_family = AF_INET;
-      servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-      servaddr.sin_port = htons(portt);
-      
-      bind(fdUDP[i], (SADDR *)&servaddr, SLEN);
-      
-      if (sendto(fdUDP[i], "sendline", 9, 0, (SADDR *)&servaddr, SLEN) == -1) {
-        perror("sendto problem");
-        exit(1);
-      
+    close(sockfd);
     }
-    }
+    
     close(fd);
     return 0;
 }
